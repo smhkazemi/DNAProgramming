@@ -1,11 +1,11 @@
 %% NB: You can find the original code we used for message passing in
 %% https://www.erlang.org/doc/getting_started/conc_prog.html
 
--module(dna_programming).
+-module(messagePassing).
 -import(lists,[append/2]).
 -record(dna, {id, age, type, genome = [], networkTopology=[], linksToParents=[], linksToChildren=[]}).
 -export([start/1, start_server/0, server/1, logon/1, logoff/0, message/2, client/2, creat_dna/7,
-  start_ping/2, start_pong/0, fork/2, to_fork_on/1, update_genome/2]).
+  start_ping/2, start_pong/0, fork/2, to_fork_on/1, update_genome/2, monitor_the_records/1]).
 
 %%% Change the function below to return the name of the node where the
 %%% messenger server runs
@@ -105,9 +105,9 @@ client(Server_Node) ->
       exit(normal);
     {message_to, ToName, Message} ->
       {messenger, Server_Node} ! {self(), message_to, ToName, Message},
-      await_result();
-    {message_from, FromName, Message} ->
-      io:format("Message from ~p: ~p~n", [FromName, Message])
+      await_result()
+%%    {message_from, FromName, Message} ->
+%%      io:format("", [FromName, Message])
   end,
   client(Server_Node).
 
@@ -123,7 +123,7 @@ await_result() ->
 
 fork(0, ToForkOnNode) ->
   {pong, ToForkOnNode} ! finished,
-  io:format("Finished forking ~n", []);
+  io:format("", []);
 
 fork(N, ToForkOnNode) ->
   {pong, ToForkOnNode} ! {ping, self()},
@@ -155,16 +155,21 @@ start_ping(Pong_Node, DNA) ->
 %% LinksToChildren: A list of all forks that the agent performs
 
 update_genome(DNA, List_Genomes)->
+  io:format("new genoms: ~p~n", [List_Genomes]),
   l = append(DNA#dna.genome, List_Genomes),
-  DNA_modified = DNA#dna{genome =  List_Genomes},
+  DNA_modified = DNA#dna{genome =  l},
+  io:fwrite("DNA is now updated: ~p~n",[DNA]),
   DNA_modified.
 
-
+monitor_the_records(Filename) ->
+  Txt = file:read_file(Filename),
+  io:fwrite("~p~n",[Txt]).
 
 creat_dna(Id, Age, Type, Genome, NetworkTopology, LinksToParents, LinksToChildren) ->
   DNA = #dna{id = Id,age = Age, genome = Genome, type = Type, networkTopology = NetworkTopology,
     linksToParents = LinksToParents, linksToChildren = LinksToChildren},
+  io:fwrite("DNA is now created: ~p~n",[DNA]),
   DNA.
 
 start(DNA)->
-  io:format("Agent started...~p~n", [DNA#dna.id]).
+  io:format("Agent started... ~p~n", [DNA#dna.id]).
